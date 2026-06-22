@@ -1,0 +1,1045 @@
+diff --git a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
+index b2409a0..23624a9 100644
+--- a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
++++ b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/module/MusicModule.kt
+@@ -251,7 +251,7 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+     }
+ 
+     @ReactMethod
+-    fun updateOptions(data: ReadableMap?, callback: Promise) = scope.launch {
++    fun updateOptions(data: ReadableMap?, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         val options = Arguments.toBundle(data)
+@@ -261,10 +261,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         }
+ 
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun add(data: ReadableArray?, insertBeforeIndex: Int, callback: Promise) = scope.launch {
++    fun add(data: ReadableArray?, insertBeforeIndex: Int, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         try {
+@@ -282,10 +282,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         } catch (exception: Exception) {
+             rejectWithException(callback, exception)
+         }
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun load(data: ReadableMap?, callback: Promise) = scope.launch {
++    fun load(data: ReadableMap?, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+         if (data == null) {
+             callback.resolve(null)
+@@ -298,17 +298,17 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         } else {
+             callback.reject("invalid_track_object", "Track was not a dictionary type")
+         }
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun move(fromIndex: Int, toIndex: Int, callback: Promise) = scope.launch {
++    fun move(fromIndex: Int, toIndex: Int, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+         musicService.move(fromIndex, toIndex)
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun remove(data: ReadableArray?, callback: Promise) = scope.launch {
++    fun remove(data: ReadableArray?, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+         val inputIndexes = Arguments.toList(data)
+         if (inputIndexes != null) {
+@@ -328,11 +328,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+             musicService.remove(indexes)
+         }
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun updateMetadataForTrack(index: Int, map: ReadableMap?, callback: Promise) =
+-        scope.launch {
++    fun updateMetadataForTrack(index: Int, map: ReadableMap?, callback: Promise) { scope.launch {
+             if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+             if (index < 0 || index >= musicService.tracks.size) {
+@@ -345,10 +344,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+ 
+                 callback.resolve(null)
+             }
+-        }
++        } }
+ 
+     @ReactMethod
+-    fun updateNowPlayingMetadata(map: ReadableMap?, callback: Promise) = scope.launch {
++    fun updateNowPlayingMetadata(map: ReadableMap?, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         if (musicService.tracks.isEmpty())
+@@ -361,10 +360,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         }
+ 
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun clearNowPlayingMetadata(callback: Promise) = scope.launch {
++    fun clearNowPlayingMetadata(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         if (musicService.tracks.isEmpty())
+@@ -372,18 +371,18 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+ 
+         musicService.clearNotificationMetadata()
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun removeUpcomingTracks(callback: Promise) = scope.launch {
++    fun removeUpcomingTracks(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.removeUpcomingTracks()
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun skip(index: Int, initialTime: Float, callback: Promise) = scope.launch {
++    fun skip(index: Int, initialTime: Float, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.skip(index)
+@@ -393,10 +392,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         }
+ 
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun skipToNext(initialTime: Float, callback: Promise) = scope.launch {
++    fun skipToNext(initialTime: Float, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.skipToNext()
+@@ -406,10 +405,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         }
+ 
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun skipToPrevious(initialTime: Float, callback: Promise) = scope.launch {
++    fun skipToPrevious(initialTime: Float, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.skipToPrevious()
+@@ -419,10 +418,10 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         }
+ 
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun reset(callback: Promise) = scope.launch {
++    fun reset(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.stop()
+@@ -430,136 +429,141 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         musicService.clear()
+ 
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun play(callback: Promise) = scope.launch {
++    fun play(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.play()
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun pause(callback: Promise) = scope.launch {
++    fun pause(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.pause()
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun stop(callback: Promise) = scope.launch {
++    fun stop(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.stop()
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun seekTo(seconds: Float, callback: Promise) = scope.launch {
++    fun seekTo(seconds: Float, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.seekTo(seconds)
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun seekBy(offset: Float, callback: Promise) = scope.launch {
++    fun seekBy(offset: Float, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.seekBy(offset)
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun retry(callback: Promise) = scope.launch {
++    fun retry(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.retry()
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun setVolume(volume: Float, callback: Promise) = scope.launch {
++    fun setVolume(volume: Float, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.setVolume(volume)
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getVolume(callback: Promise) = scope.launch {
++    fun getVolume(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(musicService.getVolume())
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun setRate(rate: Float, callback: Promise) = scope.launch {
++    fun setRate(rate: Float, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.setRate(rate)
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getRate(callback: Promise) = scope.launch {
++    fun getRate(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(musicService.getRate())
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun setRepeatMode(mode: Int, callback: Promise) = scope.launch {
++    fun setRepeatMode(mode: Int, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.setRepeatMode(RepeatMode.fromOrdinal(mode))
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getRepeatMode(callback: Promise) = scope.launch {
++    fun getRepeatMode(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(musicService.getRepeatMode().ordinal)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun setPlayWhenReady(playWhenReady: Boolean, callback: Promise) = scope.launch {
++    fun setPlayWhenReady(playWhenReady: Boolean, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         musicService.playWhenReady = playWhenReady
+         callback.resolve(null)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getPlayWhenReady(callback: Promise) = scope.launch {
++    fun getPlayWhenReady(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(musicService.playWhenReady)
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getTrack(index: Int, callback: Promise) = scope.launch {
++    fun getTrack(index: Int, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         if (index >= 0 && index < musicService.tracks.size) {
+-            callback.resolve(Arguments.fromBundle(musicService.tracks[index].originalItem))
++            val item = musicService.tracks[index].originalItem
++            if (item != null) {
++                callback.resolve(Arguments.fromBundle(item))
++            } else {
++                callback.resolve(null)
++            }
+         } else {
+             callback.resolve(null)
+         }
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getQueue(callback: Promise) = scope.launch {
++    fun getQueue(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(Arguments.fromList(musicService.tracks.map { it.originalItem }))
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun setQueue(data: ReadableArray?, callback: Promise) = scope.launch {
++    fun setQueue(data: ReadableArray?, callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         try {
+@@ -569,61 +573,65 @@ class MusicModule(reactContext: ReactApplicationContext) : ReactContextBaseJavaM
+         } catch (exception: Exception) {
+             rejectWithException(callback, exception)
+         }
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getActiveTrackIndex(callback: Promise) = scope.launch {
++    fun getActiveTrackIndex(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+         callback.resolve(
+             if (musicService.tracks.isEmpty()) null else musicService.getCurrentTrackIndex()
+         )
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getActiveTrack(callback: Promise) = scope.launch {
++    fun getActiveTrack(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+-        callback.resolve(
+-            if (musicService.tracks.isEmpty()) null
+-            else Arguments.fromBundle(
+-                musicService.tracks[musicService.getCurrentTrackIndex()].originalItem
+-            )
+-        )
+-    }
++        if (musicService.tracks.isEmpty()) {
++            callback.resolve(null)
++        } else {
++            val item = musicService.tracks[musicService.getCurrentTrackIndex()].originalItem
++            if (item != null) {
++                callback.resolve(Arguments.fromBundle(item))
++            } else {
++                callback.resolve(null)
++            }
++        }
++    } }
+ 
+     @ReactMethod
+-    fun getDuration(callback: Promise) = scope.launch {
++    fun getDuration(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(musicService.getDurationInSeconds())
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getBufferedPosition(callback: Promise) = scope.launch {
++    fun getBufferedPosition(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(musicService.getBufferedPositionInSeconds())
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getPosition(callback: Promise) = scope.launch {
++    fun getPosition(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+ 
+         callback.resolve(musicService.getPositionInSeconds())
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getProgress(callback: Promise) = scope.launch {
++    fun getProgress(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+         var bundle = Bundle()
+         bundle.putDouble("duration", musicService.getDurationInSeconds());
+         bundle.putDouble("position", musicService.getPositionInSeconds());
+         bundle.putDouble("buffered", musicService.getBufferedPositionInSeconds());
+         callback.resolve(Arguments.fromBundle(bundle))
+-    }
++    } }
+ 
+     @ReactMethod
+-    fun getPlaybackState(callback: Promise) = scope.launch {
++    fun getPlaybackState(callback: Promise) { scope.launch {
+         if (verifyServiceBoundOrReject(callback)) return@launch
+         callback.resolve(Arguments.fromBundle(musicService.getPlayerStateBundle(musicService.state)))
+-    }
++    } }
+ }
+diff --git a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
+index afa6b0f..c417e7b 100644
+--- a/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
++++ b/node_modules/react-native-track-player/android/src/main/java/com/doublesymmetry/trackplayer/service/MusicService.kt
+@@ -741,7 +741,7 @@ class MusicService : HeadlessJsTaskService() {
+ 
+     @MainThread
+     private fun emit(event: String, data: Bundle? = null) {
+-        reactNativeHost.reactInstanceManager.currentReactContext
++        reactContext
+             ?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+             ?.emit(event, data?.let { Arguments.fromBundle(it) })
+     }
+@@ -751,7 +751,7 @@ class MusicService : HeadlessJsTaskService() {
+         val payload = Arguments.createArray()
+         data.forEach { payload.pushMap(Arguments.fromBundle(it)) }
+ 
+-        reactNativeHost.reactInstanceManager.currentReactContext
++        reactContext
+             ?.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
+             ?.emit(event, payload)
+     }
+diff --git a/node_modules/react-native-track-player/lib/src/index.js b/node_modules/react-native-track-player/lib/src/index.js
+index ea0697e..e5088b0 100644
+--- a/node_modules/react-native-track-player/lib/src/index.js
++++ b/node_modules/react-native-track-player/lib/src/index.js
+@@ -1,5 +1,192 @@
+-import * as TrackPlayer from './trackPlayer';
+-export * from './constants';
+-export * from './hooks';
+-export * from './interfaces';
+-export default TrackPlayer;
++import { useEffect } from 'react';
++
++// Static constants to break dependency chain to native modules
++export const State = {
++  None: 'none',
++  Ready: 'ready',
++  Playing: 'playing',
++  Paused: 'paused',
++  Stopped: 'stopped',
++  Loading: 'loading',
++  Connecting: 'loading',
++  Buffering: 'buffering',
++  Error: 'error',
++  Ended: 'ended',
++};
++
++export const RepeatMode = {
++  Off: 0,
++  Track: 1,
++  Queue: 2,
++};
++
++export const AppKilledBehavior = {
++  ContinuePlayback: 'continue-playback',
++  PausePlayback: 'pause-playback',
++  StopPlaybackAndRemoveNotification: 'stop-playback-and-remove-notification',
++};
++
++export const Capability = {
++  Play: 'play',
++  PlayFromId: 'play-from-id',
++  PlayFromSearch: 'play-from-search',
++  Pause: 'pause',
++  Stop: 'stop',
++  SeekTo: 'seek-to',
++  Skip: 'skip',
++  SkipToNext: 'skip-to-next',
++  SkipToPrevious: 'skip-to-previous',
++  JumpForward: 'jump-forward',
++  JumpBackward: 'jump-backward',
++  SetRating: 'set-rating',
++  Like: 'like',
++  Dislike: 'dislike',
++  Bookmark: 'bookmark',
++};
++
++export const Event = {
++  PlayerError: 'player-error',
++  PlaybackState: 'playback-state',
++  PlaybackError: 'playback-error',
++  PlaybackQueueEnded: 'playback-queue-ended',
++  PlaybackTrackChanged: 'playback-track-changed',
++  PlaybackActiveTrackChanged: 'playback-active-track-changed',
++  PlaybackMetadataReceived: 'playback-metadata-received',
++  PlaybackPlayWhenReadyChanged: 'playback-play-when-ready-changed',
++  PlaybackProgressUpdated: 'playback-progress-updated',
++  RemotePlay: 'remote-play',
++  RemotePause: 'remote-pause',
++  RemoteStop: 'remote-stop',
++  RemoteNext: 'remote-next',
++  RemotePrevious: 'remote-previous',
++  RemoteJumpForward: 'remote-jump-forward',
++  RemoteJumpBackward: 'remote-jump-backward',
++  RemoteSeek: 'remote-seek',
++  RemoteSetRating: 'remote-set-rating',
++  RemoteDuck: 'remote-duck',
++  RemoteLike: 'remote-like',
++  RemoteDislike: 'remote-dislike',
++  RemoteBookmark: 'remote-bookmark',
++  RemotePlayId: 'remote-play-id',
++  RemotePlaySearch: 'remote-play-search',
++  RemoteSkip: 'remote-skip',
++  MetadataChapterReceived: 'metadata-chapter-received',
++  MetadataTimedReceived: 'metadata-timed-received',
++  MetadataCommonReceived: 'metadata-common-received',
++};
++
++const TrackPlayerMock = {
++  setupPlayer: async () => true,
++  registerPlaybackService: (factory) => {},
++  addEventListener: (event, listener) => ({ remove: () => {} }),
++  isServiceRunning: async () => false,
++  add: async (tracks, insertBeforeIndex) => {},
++  load: async (track) => {},
++  move: async (fromIndex, toIndex) => {},
++  remove: async (indexOrIndexes) => {},
++  removeUpcomingTracks: async () => {},
++  skip: async (index, initialPosition) => {},
++  skipToNext: async (initialPosition) => {},
++  skipToPrevious: async (initialPosition) => {},
++  updateOptions: async (options) => {},
++  updateMetadataForTrack: async (trackIndex, metadata) => {},
++  clearNowPlayingMetadata: async () => {},
++  updateNowPlayingMetadata: async (metadata) => {},
++  reset: async () => {},
++  play: async () => {},
++  pause: async () => {},
++  stop: async () => {},
++  setPlayWhenReady: async (playWhenReady) => playWhenReady,
++  getPlayWhenReady: async () => false,
++  seekTo: async (position) => {},
++  seekBy: async (offset) => {},
++  setVolume: async (level) => {},
++  setRate: async (rate) => {},
++  setQueue: async (tracks) => {},
++  setRepeatMode: async (mode) => mode,
++  getVolume: async () => 1.0,
++  getRate: async () => 1.0,
++  getTrack: async (index) => undefined,
++  getQueue: async () => [],
++  getActiveTrackIndex: async () => undefined,
++  getActiveTrack: async () => undefined,
++  getCurrentTrack: async () => null,
++  getDuration: async () => 0,
++  getBufferedPosition: async () => 0,
++  getPosition: async () => 0,
++  getProgress: async () => ({ position: 0, duration: 0, buffered: 0 }),
++  getState: async () => State.None,
++  getPlaybackState: async () => ({ state: State.None }),
++  getRepeatMode: async () => RepeatMode.Off,
++  retry: async () => {},
++};
++
++export const setupPlayer = TrackPlayerMock.setupPlayer;
++export const registerPlaybackService = TrackPlayerMock.registerPlaybackService;
++export const addEventListener = TrackPlayerMock.addEventListener;
++export const isServiceRunning = TrackPlayerMock.isServiceRunning;
++export const add = TrackPlayerMock.add;
++export const load = TrackPlayerMock.load;
++export const move = TrackPlayerMock.move;
++export const remove = TrackPlayerMock.remove;
++export const removeUpcomingTracks = TrackPlayerMock.removeUpcomingTracks;
++export const skip = TrackPlayerMock.skip;
++export const skipToNext = TrackPlayerMock.skipToNext;
++export const skipToPrevious = TrackPlayerMock.skipToPrevious;
++export const updateOptions = TrackPlayerMock.updateOptions;
++export const updateMetadataForTrack = TrackPlayerMock.updateMetadataForTrack;
++export const clearNowPlayingMetadata = TrackPlayerMock.clearNowPlayingMetadata;
++export const updateNowPlayingMetadata = TrackPlayerMock.updateNowPlayingMetadata;
++export const reset = TrackPlayerMock.reset;
++export const play = TrackPlayerMock.play;
++export const pause = TrackPlayerMock.pause;
++export const stop = TrackPlayerMock.stop;
++export const setPlayWhenReady = TrackPlayerMock.setPlayWhenReady;
++export const getPlayWhenReady = TrackPlayerMock.getPlayWhenReady;
++export const seekTo = TrackPlayerMock.seekTo;
++export const seekBy = TrackPlayerMock.seekBy;
++export const setVolume = TrackPlayerMock.setVolume;
++export const setRate = TrackPlayerMock.setRate;
++export const setQueue = TrackPlayerMock.setQueue;
++export const setRepeatMode = TrackPlayerMock.setRepeatMode;
++export const getVolume = TrackPlayerMock.getVolume;
++export const getRate = TrackPlayerMock.getRate;
++export const getTrack = TrackPlayerMock.getTrack;
++export const getQueue = TrackPlayerMock.getQueue;
++export const getActiveTrackIndex = TrackPlayerMock.getActiveTrackIndex;
++export const getActiveTrack = TrackPlayerMock.getActiveTrack;
++export const getCurrentTrack = TrackPlayerMock.getCurrentTrack;
++export const getDuration = TrackPlayerMock.getDuration;
++export const getBufferedPosition = TrackPlayerMock.getBufferedPosition;
++export const getPosition = TrackPlayerMock.getPosition;
++export const getProgress = TrackPlayerMock.getProgress;
++export const getState = TrackPlayerMock.getState;
++export const getPlaybackState = TrackPlayerMock.getPlaybackState;
++export const getRepeatMode = TrackPlayerMock.getRepeatMode;
++export const retry = TrackPlayerMock.retry;
++
++export function useActiveTrack() {
++  return undefined;
++}
++
++export function useIsPlaying() {
++  return { playing: false, buffering: false };
++}
++
++export function usePlayWhenReady() {
++  return { playWhenReady: false };
++}
++
++export function usePlaybackState() {
++  return { state: State.None };
++}
++
++export function useProgress() {
++  return { position: 0, duration: 0, buffered: 0 };
++}
++
++export function useTrackPlayerEvents(events, listener) {
++  useEffect(() => {}, []);
++}
++
++export default TrackPlayerMock;
+diff --git a/node_modules/react-native-track-player/lib/src/index.web.js b/node_modules/react-native-track-player/lib/src/index.web.js
+new file mode 100644
+index 0000000..04ba2fe
+--- /dev/null
++++ b/node_modules/react-native-track-player/lib/src/index.web.js
+@@ -0,0 +1,191 @@
++import { useEffect } from 'react';
++
++export const State = {
++  None: 'none',
++  Ready: 'ready',
++  Playing: 'playing',
++  Paused: 'paused',
++  Stopped: 'stopped',
++  Loading: 'loading',
++  Connecting: 'loading',
++  Buffering: 'buffering',
++  Error: 'error',
++  Ended: 'ended',
++};
++
++export const RepeatMode = {
++  Off: 0,
++  Track: 1,
++  Queue: 2,
++};
++
++export const AppKilledBehavior = {
++  ContinuePlayback: 'continue-playback',
++  PausePlayback: 'pause-playback',
++  StopPlaybackAndRemoveNotification: 'stop-playback-and-remove-notification',
++};
++
++export const Capability = {
++  Play: 'play',
++  PlayFromId: 'play-from-id',
++  PlayFromSearch: 'play-from-search',
++  Pause: 'pause',
++  Stop: 'stop',
++  SeekTo: 'seek-to',
++  Skip: 'skip',
++  SkipToNext: 'skip-to-next',
++  SkipToPrevious: 'skip-to-previous',
++  JumpForward: 'jump-forward',
++  JumpBackward: 'jump-backward',
++  SetRating: 'set-rating',
++  Like: 'like',
++  Dislike: 'dislike',
++  Bookmark: 'bookmark',
++};
++
++export const Event = {
++  PlayerError: 'player-error',
++  PlaybackState: 'playback-state',
++  PlaybackError: 'playback-error',
++  PlaybackQueueEnded: 'playback-queue-ended',
++  PlaybackTrackChanged: 'playback-track-changed',
++  PlaybackActiveTrackChanged: 'playback-active-track-changed',
++  PlaybackMetadataReceived: 'playback-metadata-received',
++  PlaybackPlayWhenReadyChanged: 'playback-play-when-ready-changed',
++  PlaybackProgressUpdated: 'playback-progress-updated',
++  RemotePlay: 'remote-play',
++  RemotePause: 'remote-pause',
++  RemoteStop: 'remote-stop',
++  RemoteNext: 'remote-next',
++  RemotePrevious: 'remote-previous',
++  RemoteJumpForward: 'remote-jump-forward',
++  RemoteJumpBackward: 'remote-jump-backward',
++  RemoteSeek: 'remote-seek',
++  RemoteSetRating: 'remote-set-rating',
++  RemoteDuck: 'remote-duck',
++  RemoteLike: 'remote-like',
++  RemoteDislike: 'remote-dislike',
++  RemoteBookmark: 'remote-bookmark',
++  RemotePlayId: 'remote-play-id',
++  RemotePlaySearch: 'remote-play-search',
++  RemoteSkip: 'remote-skip',
++  MetadataChapterReceived: 'metadata-chapter-received',
++  MetadataTimedReceived: 'metadata-timed-received',
++  MetadataCommonReceived: 'metadata-common-received',
++};
++
++const TrackPlayerMock = {
++  setupPlayer: async () => true,
++  registerPlaybackService: (factory) => {},
++  addEventListener: (event, listener) => ({ remove: () => {} }),
++  isServiceRunning: async () => false,
++  add: async (tracks, insertBeforeIndex) => {},
++  load: async (track) => {},
++  move: async (fromIndex, toIndex) => {},
++  remove: async (indexOrIndexes) => {},
++  removeUpcomingTracks: async () => {},
++  skip: async (index, initialPosition) => {},
++  skipToNext: async (initialPosition) => {},
++  skipToPrevious: async (initialPosition) => {},
++  updateOptions: async (options) => {},
++  updateMetadataForTrack: async (trackIndex, metadata) => {},
++  clearNowPlayingMetadata: async () => {},
++  updateNowPlayingMetadata: async (metadata) => {},
++  reset: async () => {},
++  play: async () => {},
++  pause: async () => {},
++  stop: async () => {},
++  setPlayWhenReady: async (playWhenReady) => playWhenReady,
++  getPlayWhenReady: async () => false,
++  seekTo: async (position) => {},
++  seekBy: async (offset) => {},
++  setVolume: async (level) => {},
++  setRate: async (rate) => {},
++  setQueue: async (tracks) => {},
++  setRepeatMode: async (mode) => mode,
++  getVolume: async () => 1.0,
++  getRate: async () => 1.0,
++  getTrack: async (index) => undefined,
++  getQueue: async () => [],
++  getActiveTrackIndex: async () => undefined,
++  getActiveTrack: async () => undefined,
++  getCurrentTrack: async () => null,
++  getDuration: async () => 0,
++  getBufferedPosition: async () => 0,
++  getPosition: async () => 0,
++  getProgress: async () => ({ position: 0, duration: 0, buffered: 0 }),
++  getState: async () => State.None,
++  getPlaybackState: async () => ({ state: State.None }),
++  getRepeatMode: async () => RepeatMode.Off,
++  retry: async () => {},
++};
++
++export const setupPlayer = TrackPlayerMock.setupPlayer;
++export const registerPlaybackService = TrackPlayerMock.registerPlaybackService;
++export const addEventListener = TrackPlayerMock.addEventListener;
++export const isServiceRunning = TrackPlayerMock.isServiceRunning;
++export const add = TrackPlayerMock.add;
++export const load = TrackPlayerMock.load;
++export const move = TrackPlayerMock.move;
++export const remove = TrackPlayerMock.remove;
++export const removeUpcomingTracks = TrackPlayerMock.removeUpcomingTracks;
++export const skip = TrackPlayerMock.skip;
++export const skipToNext = TrackPlayerMock.skipToNext;
++export const skipToPrevious = TrackPlayerMock.skipToPrevious;
++export const updateOptions = TrackPlayerMock.updateOptions;
++export const updateMetadataForTrack = TrackPlayerMock.updateMetadataForTrack;
++export const clearNowPlayingMetadata = TrackPlayerMock.clearNowPlayingMetadata;
++export const updateNowPlayingMetadata = TrackPlayerMock.updateNowPlayingMetadata;
++export const reset = TrackPlayerMock.reset;
++export const play = TrackPlayerMock.play;
++export const pause = TrackPlayerMock.pause;
++export const stop = TrackPlayerMock.stop;
++export const setPlayWhenReady = TrackPlayerMock.setPlayWhenReady;
++export const getPlayWhenReady = TrackPlayerMock.getPlayWhenReady;
++export const seekTo = TrackPlayerMock.seekTo;
++export const seekBy = TrackPlayerMock.seekBy;
++export const setVolume = TrackPlayerMock.setVolume;
++export const setRate = TrackPlayerMock.setRate;
++export const setQueue = TrackPlayerMock.setQueue;
++export const setRepeatMode = TrackPlayerMock.setRepeatMode;
++export const getVolume = TrackPlayerMock.getVolume;
++export const getRate = TrackPlayerMock.getRate;
++export const getTrack = TrackPlayerMock.getTrack;
++export const getQueue = TrackPlayerMock.getQueue;
++export const getActiveTrackIndex = TrackPlayerMock.getActiveTrackIndex;
++export const getActiveTrack = TrackPlayerMock.getActiveTrack;
++export const getCurrentTrack = TrackPlayerMock.getCurrentTrack;
++export const getDuration = TrackPlayerMock.getDuration;
++export const getBufferedPosition = TrackPlayerMock.getBufferedPosition;
++export const getPosition = TrackPlayerMock.getPosition;
++export const getProgress = TrackPlayerMock.getProgress;
++export const getState = TrackPlayerMock.getState;
++export const getPlaybackState = TrackPlayerMock.getPlaybackState;
++export const getRepeatMode = TrackPlayerMock.getRepeatMode;
++export const retry = TrackPlayerMock.retry;
++
++export function useActiveTrack() {
++  return undefined;
++}
++
++export function useIsPlaying() {
++  return { playing: false, buffering: false };
++}
++
++export function usePlayWhenReady() {
++  return { playWhenReady: false };
++}
++
++export function usePlaybackState() {
++  return { state: State.None };
++}
++
++export function useProgress() {
++  return { position: 0, duration: 0, buffered: 0 };
++}
++
++export function useTrackPlayerEvents(events, listener) {
++  useEffect(() => {}, []);
++}
++
++export default TrackPlayerMock;
+diff --git a/node_modules/react-native-track-player/src/index.web.ts b/node_modules/react-native-track-player/src/index.web.ts
+new file mode 100644
+index 0000000..03ef8a9
+--- /dev/null
++++ b/node_modules/react-native-track-player/src/index.web.ts
+@@ -0,0 +1,191 @@
++import { useEffect } from 'react';
++
++export const State = {
++  None: 'none',
++  Ready: 'ready',
++  Playing: 'playing',
++  Paused: 'paused',
++  Stopped: 'stopped',
++  Loading: 'loading',
++  Connecting: 'loading',
++  Buffering: 'buffering',
++  Error: 'error',
++  Ended: 'ended',
++};
++
++export const RepeatMode = {
++  Off: 0,
++  Track: 1,
++  Queue: 2,
++};
++
++export const AppKilledBehavior = {
++  ContinuePlayback: 'continue-playback',
++  PausePlayback: 'pause-playback',
++  StopPlaybackAndRemoveNotification: 'stop-playback-and-remove-notification',
++};
++
++export const Capability = {
++  Play: 'play',
++  PlayFromId: 'play-from-id',
++  PlayFromSearch: 'play-from-search',
++  Pause: 'pause',
++  Stop: 'stop',
++  SeekTo: 'seek-to',
++  Skip: 'skip',
++  SkipToNext: 'skip-to-next',
++  SkipToPrevious: 'skip-to-previous',
++  JumpForward: 'jump-forward',
++  JumpBackward: 'jump-backward',
++  SetRating: 'set-rating',
++  Like: 'like',
++  Dislike: 'dislike',
++  Bookmark: 'bookmark',
++};
++
++export const Event = {
++  PlayerError: 'player-error',
++  PlaybackState: 'playback-state',
++  PlaybackError: 'playback-error',
++  PlaybackQueueEnded: 'playback-queue-ended',
++  PlaybackTrackChanged: 'playback-track-changed',
++  PlaybackActiveTrackChanged: 'playback-active-track-changed',
++  PlaybackMetadataReceived: 'playback-metadata-received',
++  PlaybackPlayWhenReadyChanged: 'playback-play-when-ready-changed',
++  PlaybackProgressUpdated: 'playback-progress-updated',
++  RemotePlay: 'remote-play',
++  RemotePause: 'remote-pause',
++  RemoteStop: 'remote-stop',
++  RemoteNext: 'remote-next',
++  RemotePrevious: 'remote-previous',
++  RemoteJumpForward: 'remote-jump-forward',
++  RemoteJumpBackward: 'remote-jump-backward',
++  RemoteSeek: 'remote-seek',
++  RemoteSetRating: 'remote-set-rating',
++  RemoteDuck: 'remote-duck',
++  RemoteLike: 'remote-like',
++  RemoteDislike: 'remote-dislike',
++  RemoteBookmark: 'remote-bookmark',
++  RemotePlayId: 'remote-play-id',
++  RemotePlaySearch: 'remote-play-search',
++  RemoteSkip: 'remote-skip',
++  MetadataChapterReceived: 'metadata-chapter-received',
++  MetadataTimedReceived: 'metadata-timed-received',
++  MetadataCommonReceived: 'metadata-common-received',
++};
++
++const TrackPlayerMock = {
++  setupPlayer: async () => true,
++  registerPlaybackService: (factory: any) => {},
++  addEventListener: (event: any, listener: any) => ({ remove: () => {} }),
++  isServiceRunning: async () => false,
++  add: async (tracks: any, insertBeforeIndex?: number) => {},
++  load: async (track: any) => {},
++  move: async (fromIndex: number, toIndex: number) => {},
++  remove: async (indexOrIndexes: number | number[]) => {},
++  removeUpcomingTracks: async () => {},
++  skip: async (index: number, initialPosition?: number) => {},
++  skipToNext: async (initialPosition?: number) => {},
++  skipToPrevious: async (initialPosition?: number) => {},
++  updateOptions: async (options: any) => {},
++  updateMetadataForTrack: async (trackIndex: number, metadata: any) => {},
++  clearNowPlayingMetadata: async () => {},
++  updateNowPlayingMetadata: async (metadata: any) => {},
++  reset: async () => {},
++  play: async () => {},
++  pause: async () => {},
++  stop: async () => {},
++  setPlayWhenReady: async (playWhenReady: boolean) => playWhenReady,
++  getPlayWhenReady: async () => false,
++  seekTo: async (position: number) => {},
++  seekBy: async (offset: number) => {},
++  setVolume: async (level: number) => {},
++  setRate: async (rate: number) => {},
++  setQueue: async (tracks: any) => {},
++  setRepeatMode: async (mode: any) => mode,
++  getVolume: async () => 1.0,
++  getRate: async () => 1.0,
++  getTrack: async (index: number) => undefined,
++  getQueue: async () => [],
++  getActiveTrackIndex: async () => undefined,
++  getActiveTrack: async () => undefined,
++  getCurrentTrack: async () => null,
++  getDuration: async () => 0,
++  getBufferedPosition: async () => 0,
++  getPosition: async () => 0,
++  getProgress: async () => ({ position: 0, duration: 0, buffered: 0 }),
++  getState: async () => State.None,
++  getPlaybackState: async () => ({ state: State.None }),
++  getRepeatMode: async () => RepeatMode.Off,
++  retry: async () => {},
++};
++
++export const setupPlayer = TrackPlayerMock.setupPlayer;
++export const registerPlaybackService = TrackPlayerMock.registerPlaybackService;
++export const addEventListener = TrackPlayerMock.addEventListener;
++export const isServiceRunning = TrackPlayerMock.isServiceRunning;
++export const add = TrackPlayerMock.add;
++export const load = TrackPlayerMock.load;
++export const move = TrackPlayerMock.move;
++export const remove = TrackPlayerMock.remove;
++export const removeUpcomingTracks = TrackPlayerMock.removeUpcomingTracks;
++export const skip = TrackPlayerMock.skip;
++export const skipToNext = TrackPlayerMock.skipToNext;
++export const skipToPrevious = TrackPlayerMock.skipToPrevious;
++export const updateOptions = TrackPlayerMock.updateOptions;
++export const updateMetadataForTrack = TrackPlayerMock.updateMetadataForTrack;
++export const clearNowPlayingMetadata = TrackPlayerMock.clearNowPlayingMetadata;
++export const updateNowPlayingMetadata = TrackPlayerMock.updateNowPlayingMetadata;
++export const reset = TrackPlayerMock.reset;
++export const play = TrackPlayerMock.play;
++export const pause = TrackPlayerMock.pause;
++export const stop = TrackPlayerMock.stop;
++export const setPlayWhenReady = TrackPlayerMock.setPlayWhenReady;
++export const getPlayWhenReady = TrackPlayerMock.getPlayWhenReady;
++export const seekTo = TrackPlayerMock.seekTo;
++export const seekBy = TrackPlayerMock.seekBy;
++export const setVolume = TrackPlayerMock.setVolume;
++export const setRate = TrackPlayerMock.setRate;
++export const setQueue = TrackPlayerMock.setQueue;
++export const setRepeatMode = TrackPlayerMock.setRepeatMode;
++export const getVolume = TrackPlayerMock.getVolume;
++export const getRate = TrackPlayerMock.getRate;
++export const getTrack = TrackPlayerMock.getTrack;
++export const getQueue = TrackPlayerMock.getQueue;
++export const getActiveTrackIndex = TrackPlayerMock.getActiveTrackIndex;
++export const getActiveTrack = TrackPlayerMock.getActiveTrack;
++export const getCurrentTrack = TrackPlayerMock.getCurrentTrack;
++export const getDuration = TrackPlayerMock.getDuration;
++export const getBufferedPosition = TrackPlayerMock.getBufferedPosition;
++export const getPosition = TrackPlayerMock.getPosition;
++export const getProgress = TrackPlayerMock.getProgress;
++export const getState = TrackPlayerMock.getState;
++export const getPlaybackState = TrackPlayerMock.getPlaybackState;
++export const getRepeatMode = TrackPlayerMock.getRepeatMode;
++export const retry = TrackPlayerMock.retry;
++
++export function useActiveTrack() {
++  return undefined;
++}
++
++export function useIsPlaying() {
++  return { playing: false, buffering: false };
++}
++
++export function usePlayWhenReady() {
++  return { playWhenReady: false };
++}
++
++export function usePlaybackState() {
++  return { state: State.None };
++}
++
++export function useProgress() {
++  return { position: 0, duration: 0, buffered: 0 };
++}
++
++export function useTrackPlayerEvents(events: any[], listener: any) {
++  useEffect(() => {}, []);
++}
++
++export default TrackPlayerMock;
