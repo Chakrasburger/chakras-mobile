@@ -42,10 +42,51 @@ export default function ThemeSettingsScreen() {
     setGlassOpacity,
   } = useSettingsStore();
 
-  const dynamicBg = theme === 'oled' ? '#000000' : '#121212';
-  const dynamicSurface = theme === 'oled' 
-    ? `rgba(20, 20, 20, ${glassOpacity})` 
-    : `rgba(54, 57, 63, ${glassOpacity})`;
+  const getThemeColors = () => {
+    switch (theme) {
+      case 'oled':
+        return {
+          bg: '#000000',
+          surface: `rgba(20, 20, 20, ${glassOpacity})`,
+          text: '#DCDDDE',
+          textSecondary: '#96989D',
+          textMuted: '#72767D',
+          border: 'rgba(255, 255, 255, 0.08)',
+        };
+      case 'nord':
+        return {
+          bg: '#2E3440',
+          surface: `rgba(59, 66, 82, ${glassOpacity})`,
+          text: '#D8DEE9',
+          textSecondary: '#E5E9F0',
+          textMuted: '#4C566A',
+          border: 'rgba(76, 86, 106, 0.5)',
+        };
+      case 'light':
+        return {
+          bg: '#F3F4F6',
+          surface: `rgba(255, 255, 255, ${glassOpacity})`,
+          text: '#1F2937',
+          textSecondary: '#4B5563',
+          textMuted: '#9CA3AF',
+          border: 'rgba(209, 213, 219, 0.8)',
+        };
+      case 'chakras':
+      default:
+        return {
+          bg: '#121212',
+          surface: `rgba(54, 57, 63, ${glassOpacity})`,
+          text: '#DCDDDE',
+          textSecondary: '#96989D',
+          textMuted: '#72767D',
+          border: 'rgba(79, 84, 92, 0.4)',
+        };
+    }
+  };
+
+  const colors = getThemeColors();
+  const dynamicBg = colors.bg;
+  const dynamicSurface = colors.surface;
 
   const handleIntensityChange = (increment: boolean) => {
     const newVal = increment ? Math.min(100, blurIntensity + 10) : Math.max(0, blurIntensity - 10);
@@ -61,59 +102,91 @@ export default function ThemeSettingsScreen() {
     <View style={[styles.screen, { paddingTop: insets.top, backgroundColor: dynamicBg }]}>
       {/* Header */}
       <Animated.View entering={FadeIn.duration(400)} style={styles.header}>
-        <TouchableOpacity style={[styles.backBtn, { backgroundColor: dynamicSurface }]} onPress={() => router.back()} activeOpacity={0.7}>
-          <Ionicons name="arrow-back" size={24} color={TEXT_PRIMARY} />
+        <TouchableOpacity style={[styles.backBtn, { backgroundColor: dynamicSurface, borderColor: colors.border }]} onPress={() => router.back()} activeOpacity={0.7}>
+          <Ionicons name="arrow-back" size={24} color={colors.text} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Apariencia y Temas</Text>
+        <Text style={[styles.headerTitle, { color: colors.text }]}>Apariencia y Temas</Text>
       </Animated.View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Tema */}
         <Animated.View entering={FadeInDown.delay(100).springify()} style={styles.section}>
-          <Text style={styles.sectionTitle}>Tema Base</Text>
-          <Text style={styles.sectionDesc}>Elige el estilo de fondo del reproductor</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Tema Base</Text>
+          <Text style={[styles.sectionDesc, { color: colors.textMuted }]}>Elige el estilo de fondo del reproductor</Text>
 
           <View style={styles.themeGrid}>
             <TouchableOpacity
               style={[
                 styles.themeCard,
-                { backgroundColor: dynamicSurface },
+                { backgroundColor: dynamicSurface, borderColor: colors.border },
                 theme === 'chakras' && { borderColor: accentColor, borderWidth: 2 },
               ]}
               onPress={() => setTheme('chakras')}
               activeOpacity={0.8}
             >
-              <View style={[styles.themePreview, { backgroundColor: '#1E2124' }]}>
+              <View style={[styles.themePreview, { backgroundColor: '#1E2124', borderColor: colors.border }]}>
                 <View style={[styles.themeMockBar, { backgroundColor: accentColor }]} />
                 <View style={[styles.themeMockCard, { backgroundColor: 'rgba(54, 57, 63, 0.6)' }]} />
               </View>
-              <Text style={styles.themeLabel}>Chakras Oscuro</Text>
+              <Text style={[styles.themeLabel, { color: colors.text }]}>Chakras Oscuro</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
               style={[
                 styles.themeCard,
-                { backgroundColor: dynamicSurface },
+                { backgroundColor: dynamicSurface, borderColor: colors.border },
                 theme === 'oled' && { borderColor: accentColor, borderWidth: 2 },
               ]}
               onPress={() => setTheme('oled')}
               activeOpacity={0.8}
             >
-              <View style={[styles.themePreview, { backgroundColor: '#000000' }]}>
+              <View style={[styles.themePreview, { backgroundColor: '#000000', borderColor: colors.border }]}>
                 <View style={[styles.themeMockBar, { backgroundColor: accentColor }]} />
                 <View style={[styles.themeMockCard, { backgroundColor: 'rgba(28, 28, 30, 0.8)' }]} />
               </View>
-              <Text style={styles.themeLabel}>OLED Negro</Text>
+              <Text style={[styles.themeLabel, { color: colors.text }]}>OLED Negro</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.themeCard,
+                { backgroundColor: dynamicSurface, borderColor: colors.border },
+                theme === 'nord' && { borderColor: accentColor, borderWidth: 2 },
+              ]}
+              onPress={() => setTheme('nord')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.themePreview, { backgroundColor: '#2E3440', borderColor: colors.border }]}>
+                <View style={[styles.themeMockBar, { backgroundColor: accentColor }]} />
+                <View style={[styles.themeMockCard, { backgroundColor: 'rgba(76, 86, 106, 0.8)' }]} />
+              </View>
+              <Text style={[styles.themeLabel, { color: colors.text }]}>Nord Polar</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={[
+                styles.themeCard,
+                { backgroundColor: dynamicSurface, borderColor: colors.border },
+                theme === 'light' && { borderColor: accentColor, borderWidth: 2 },
+              ]}
+              onPress={() => setTheme('light')}
+              activeOpacity={0.8}
+            >
+              <View style={[styles.themePreview, { backgroundColor: '#FFFFFF', borderColor: colors.border }]}>
+                <View style={[styles.themeMockBar, { backgroundColor: accentColor }]} />
+                <View style={[styles.themeMockCard, { backgroundColor: 'rgba(229, 231, 235, 0.8)' }]} />
+              </View>
+              <Text style={[styles.themeLabel, { color: colors.text }]}>Light Claro</Text>
             </TouchableOpacity>
           </View>
         </Animated.View>
 
         {/* Color de Acento */}
         <Animated.View entering={FadeInDown.delay(200).springify()} style={styles.section}>
-          <Text style={styles.sectionTitle}>Color de Acento</Text>
-          <Text style={styles.sectionDesc}>Cambia el color de los botones, barras e íconos activos</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Color de Acento</Text>
+          <Text style={[styles.sectionDesc, { color: colors.textMuted }]}>Cambia el color de los botones, barras e íconos activos</Text>
 
-          <View style={[styles.colorGrid, { backgroundColor: dynamicSurface }]}>
+          <View style={[styles.colorGrid, { backgroundColor: dynamicSurface, borderColor: colors.border }]}>
             {ACCENT_PRESETS.map((color) => {
               const isSelected = accentColor.toLowerCase() === color.toLowerCase();
               return (
@@ -142,40 +215,40 @@ export default function ThemeSettingsScreen() {
 
         {/* Efectos de Vidrio */}
         <Animated.View entering={FadeInDown.delay(300).springify()} style={styles.section}>
-          <Text style={styles.sectionTitle}>Efectos de Vidrio (Glassmorphism)</Text>
-          <Text style={styles.sectionDesc}>Ajusta los efectos visuales traslúcidos</Text>
+          <Text style={[styles.sectionTitle, { color: colors.text }]}>Efectos de Vidrio (Glassmorphism)</Text>
+          <Text style={[styles.sectionDesc, { color: colors.textMuted }]}>Ajusta los efectos visuales traslúcidos</Text>
 
-          <View style={[styles.card, { backgroundColor: dynamicSurface }]}>
+          <View style={[styles.card, { backgroundColor: dynamicSurface, borderColor: colors.border }]}>
             {/* Opacidad */}
             <View style={styles.sliderRow}>
               <View style={styles.sliderTextCol}>
-                <Text style={styles.sliderLabel}>Transparencia del Vidrio</Text>
-                <Text style={styles.sliderValue}>{(glassOpacity * 100).toFixed(0)}%</Text>
+                <Text style={[styles.sliderLabel, { color: colors.text }]}>Transparencia del Vidrio</Text>
+                <Text style={[styles.sliderValue, { color: colors.textSecondary }]}>{(glassOpacity * 100).toFixed(0)}%</Text>
               </View>
               <View style={styles.controlButtons}>
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleOpacityChange(false)}>
-                  <Ionicons name="remove" size={20} color="#fff" />
+                  <Ionicons name="remove" size={20} color={colors.text} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleOpacityChange(true)}>
-                  <Ionicons name="add" size={20} color="#fff" />
+                  <Ionicons name="add" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
             </View>
 
-            <View style={styles.divider} />
+            <View style={[styles.divider, { backgroundColor: colors.border }]} />
 
             {/* Intensidad Blur */}
             <View style={styles.sliderRow}>
               <View style={styles.sliderTextCol}>
-                <Text style={styles.sliderLabel}>Desenfoque del Fondo (Blur)</Text>
-                <Text style={styles.sliderValue}>{blurIntensity}%</Text>
+                <Text style={[styles.sliderLabel, { color: colors.text }]}>Desenfoque del Fondo (Blur)</Text>
+                <Text style={[styles.sliderValue, { color: colors.textSecondary }]}>{blurIntensity}%</Text>
               </View>
               <View style={styles.controlButtons}>
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleIntensityChange(false)}>
-                  <Ionicons name="remove" size={20} color="#fff" />
+                  <Ionicons name="remove" size={20} color={colors.text} />
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.controlBtn} onPress={() => handleIntensityChange(true)}>
-                  <Ionicons name="add" size={20} color="#fff" />
+                  <Ionicons name="add" size={20} color={colors.text} />
                 </TouchableOpacity>
               </View>
             </View>
@@ -235,10 +308,11 @@ const styles = StyleSheet.create({
   },
   themeGrid: {
     flexDirection: 'row',
-    gap: 14,
+    flexWrap: 'wrap',
+    gap: 12,
   },
   themeCard: {
-    flex: 1,
+    width: (Dimensions.get('window').width - 40 - 12) / 2,
     backgroundColor: SURFACE,
     borderRadius: 16,
     padding: 12,

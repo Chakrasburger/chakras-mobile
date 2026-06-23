@@ -8,6 +8,7 @@ import {
   TouchableOpacity,
   Dimensions,
   Platform,
+  Modal,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
@@ -84,7 +85,7 @@ function RecentCard({ item, index, onPlay }: { item: Track; index: number; onPla
   );
 }
 
-function SongRow({ item, index, onPlay }: { item: Track; index: number; onPlay: (track: Track) => void }) {
+function SongRow({ item, index, onPlay, onMore }: { item: Track; index: number; onPlay: (track: Track) => void; onMore: (track: Track) => void }) {
   return (
     <Animated.View entering={FadeInDown.delay(100 + index * 50).springify()}>
       <TouchableOpacity style={styles.songRow} activeOpacity={0.6} onPress={() => onPlay(item)}>
@@ -103,7 +104,7 @@ function SongRow({ item, index, onPlay }: { item: Track; index: number; onPlay: 
           </Text>
         </View>
         <Text style={styles.songDuration}>{formatDuration(item.duration)}</Text>
-        <TouchableOpacity style={styles.moreButton} hitSlop={8}>
+        <TouchableOpacity style={styles.moreButton} hitSlop={8} onPress={() => onMore(item)}>
           <Ionicons name="ellipsis-vertical" size={18} color={TEXT_MUTED} />
         </TouchableOpacity>
       </TouchableOpacity>
@@ -116,28 +117,65 @@ export default function HomeScreen() {
   const [activeTab, setActiveTab] = useState(0);
   const router = useRouter();
 
-  const { songs, artists, albums, setSongs } = useLibraryStore();
+  const { songs, artists, albums, setSongs, playlists, setPlaylists, addTrackToPlaylist } = useLibraryStore();
   const { play, setQueue } = usePlayerStore();
   const { playHistory } = useAnalyticsStore();
   const { theme, accentColor, glassOpacity } = useSettingsStore();
   const [isScanning, setIsScanning] = useState(false);
+
+  // States for options modal
+  const [selectedTrack, setSelectedTrack] = useState<Track | null>(null);
+  const [showOptions, setShowOptions] = useState(false);
+  const [showPlaylistSelection, setShowPlaylistSelection] = useState(false);
 
   const dynamicBg = theme === 'oled' ? '#000000' : '#121212';
   const dynamicSurface = theme === 'oled' 
     ? `rgba(20, 20, 20, ${glassOpacity})` 
     : `rgba(54, 57, 63, ${glassOpacity})`;
 
-  // Cargar canciones guardadas en la base de datos al iniciar
+  // Cargar canciones y playlists guardadas en la base de datos al iniciar
   React.useEffect(() => {
     try {
       const savedTracks = getAllTracks();
       if (savedTracks && savedTracks.length > 0) {
         setSongs(savedTracks);
       }
+      const { getAllPlaylists } = require('../../services/library');
+      const savedPlaylists = getAllPlaylists();
+      if (savedPlaylists) {
+        setPlaylists(savedPlaylists);
+      }
     } catch (error) {
       console.error('Error cargando biblioteca SQLite inicial:', error);
     }
   }, []);
+
+  const handleSongMore = (track: Track) => {
+    setSelectedTrack(track);
+    setShowOptions(true);
+  };
+
+  const handleAddToPlaylist = (playlistId: string) => {
+    if (selectedTrack) {
+      addTrackToPlaylist(playlistId, selectedTrack);
+      Alert.alert('Éxito', `Se añadió "${selectedTrack.title}" a la playlist.`);
+      setShowPlaylistSelection(false);
+      setShowOptions(false);
+    }
+  };
+
+  const toggleFavorite = () => {
+    if (!selectedTrack) return;
+    const nextFav = !selectedTrack.isFavorite;
+    useLibraryStore.getState().updateSong(selectedTrack.id, { isFavorite: nextFav });
+    try {
+      const { saveTrack } = require('../../services/library');
+      saveTrack({ ...selectedTrack, isFavorite: nextFav });
+    } catch (err) {
+      console.warn('Error saving favorite status:', err);
+    }
+    setShowOptions(false);
+  };
 
   // Compute recently played list based on history and library songs
   const recentTracks = useMemo(() => {
@@ -351,7 +389,7 @@ export default function HomeScreen() {
               </View>
             ) : (
               songs.map((song, index) => (
-                <SongRow key={song.id} item={song} index={index} onPlay={handlePlayTrack} />
+                <SongRow key={song.id} item={song} index={index} onPlay={handlePlayTrack} onMore={handleSongMore} />
               ))
             )
           )}
@@ -402,6 +440,77 @@ export default function HomeScreen() {
         {/* Bottom padding for mini player + tab bar */}
         <View style={{ height: 140 }} />
       </ScrollView>
+
+      {/* Options Modal */}
+      {showOptions && selectedTrack && (
+        <Modal transparent animationType="fade" visible={showOptions} onRequestClose={() => setShowOptions(false)}>
+          <View style={styles.optionsOverlay}>
+            <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setShowOptions(false)} />
+            <BlurView intensity={90} tint="dark" style={styles.optionsContainer}>
+              <View style={styles.optionsHeader}>
+                <Text style={styles.optionsTitle} numberOfLines={1}>{selectedTrack.title}</Text>
+                <Text style={styles.optionsSubtitle} numberOfLines={1}>{selectedTrack.artist}</Text>
+              </View>
+              <View style={styles.optionsDivider} />
+              
+              <TouchableOpacity style={styles.optionItem} onPress={() => setShowPlaylistSelection(true)}>
+                <Ionicons name="list-outline" size={20} color={TEXT_PRIMARY} />
+                <Text style={styles.optionText}>Agregar a playlist...</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={styles.optionItem} onPress={toggleFavorite}>
+                <Ionicons name={selectedTrack.isFavorite ? "heart" : "heart-outline"} size={20} color={selectedTrack.isFavorite ? accentColor : TEXT_PRIMARY} />
+                <Text style={styles.optionText}>
+                  {selectedTrack.isFavorite ? 'Quitar de favoritas' : 'Marcar como favorita'}
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity style={[styles.optionItem, { marginTop: 8 }]} onPress={() => setShowOptions(false)}>
+                <Text style={[styles.optionText, { color: '#ED4245', textAlign: 'center', width: '100%', fontWeight: '700' }]}>Cancelar</Text>
+              </TouchableOpacity>
+            </BlurView>
+          </View>
+        </Modal>
+      )}
+
+      {/* Playlist Selection Modal */}
+      {showPlaylistSelection && selectedTrack && (
+        <Modal transparent animationType="slide" visible={showPlaylistSelection} onRequestClose={() => setShowPlaylistSelection(false)}>
+          <View style={styles.playlistOverlay}>
+            <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setShowPlaylistSelection(false)} />
+            <View style={[styles.playlistContainer, { backgroundColor: dynamicBg }]}>
+              <View style={styles.playlistHeader}>
+                <Text style={styles.playlistTitle}>Seleccionar Playlist</Text>
+                <TouchableOpacity onPress={() => setShowPlaylistSelection(false)}>
+                  <Ionicons name="close" size={24} color={TEXT_PRIMARY} />
+                </TouchableOpacity>
+              </View>
+
+              <ScrollView contentContainerStyle={styles.playlistList}>
+                {playlists.length === 0 ? (
+                  <View style={{ padding: 40, alignItems: 'center' }}>
+                    <Text style={{ color: TEXT_MUTED, textAlign: 'center' }}>No tienes playlists creadas. Ve al apartado de Playlists para crear una.</Text>
+                  </View>
+                ) : (
+                  playlists.map((playlist) => (
+                    <TouchableOpacity
+                      key={playlist.id}
+                      style={styles.playlistItem}
+                      onPress={() => handleAddToPlaylist(playlist.id)}
+                    >
+                      <Ionicons name="musical-notes-outline" size={22} color={accentColor} />
+                      <View style={{ flex: 1, marginLeft: 12 }}>
+                        <Text style={styles.playlistName}>{playlist.name}</Text>
+                        <Text style={styles.playlistTracksCount}>{playlist.tracks.length} canciones</Text>
+                      </View>
+                    </TouchableOpacity>
+                  ))
+                )}
+              </ScrollView>
+            </View>
+          </View>
+        </Modal>
+      )}
     </View>
   );
 }
@@ -598,5 +707,97 @@ const styles = StyleSheet.create({
   },
   moreButton: {
     padding: 4,
+  },
+  optionsOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  optionsContainer: {
+    borderTopLeftRadius: 20,
+    borderTopRightRadius: 20,
+    padding: 24,
+    paddingBottom: 40,
+    backgroundColor: 'rgba(30, 30, 30, 0.85)',
+    overflow: 'hidden',
+  },
+  optionsHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  optionsTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: TEXT_PRIMARY,
+    textAlign: 'center',
+  },
+  optionsSubtitle: {
+    fontSize: 13,
+    color: TEXT_MUTED,
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  optionsDivider: {
+    height: 0.5,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+    marginVertical: 12,
+  },
+  optionItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    paddingHorizontal: 8,
+    gap: 12,
+  },
+  optionText: {
+    fontSize: 15,
+    color: TEXT_PRIMARY,
+    fontWeight: '500',
+  },
+  playlistOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.6)',
+    justifyContent: 'flex-end',
+  },
+  playlistContainer: {
+    height: '60%',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    paddingTop: 20,
+  },
+  playlistHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(255,255,255,0.1)',
+  },
+  playlistTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: TEXT_PRIMARY,
+  },
+  playlistList: {
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+  },
+  playlistItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 14,
+    borderBottomWidth: 0.5,
+    borderBottomColor: 'rgba(255,255,255,0.05)',
+  },
+  playlistName: {
+    fontSize: 15,
+    fontWeight: '600',
+    color: TEXT_PRIMARY,
+  },
+  playlistTracksCount: {
+    fontSize: 12,
+    color: TEXT_MUTED,
+    marginTop: 2,
   },
 });

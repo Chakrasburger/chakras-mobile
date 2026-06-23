@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 interface SettingsState {
-  theme: 'chakras' | 'oled';
+  theme: 'chakras' | 'oled' | 'light' | 'nord';
   accentColor: string;
   blurIntensity: number;
   glassOpacity: number;
@@ -17,7 +17,7 @@ interface SettingsState {
   normalizationEnabled: boolean;
   hapticFeedback: boolean;
 
-  setTheme: (theme: 'chakras' | 'oled') => void;
+  setTheme: (theme: 'chakras' | 'oled' | 'light' | 'nord') => void;
   setAccentColor: (color: string) => void;
   setBlurIntensity: (intensity: number) => void;
   setGlassOpacity: (opacity: number) => void;

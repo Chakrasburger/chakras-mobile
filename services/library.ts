@@ -104,3 +104,79 @@ export function clearAllTables() {
     VACUUM;
   `);
 }
+
+export function savePlaylist(id: string, name: string, createdAt: number) {
+  if (isWeb) return;
+  const stmt = db!.prepareSync(`INSERT OR REPLACE INTO playlists (id, name, createdAt) VALUES (?, ?, ?)`);
+  try {
+    stmt.executeSync([id, name, createdAt]);
+  } finally {
+    stmt.finalizeSync();
+  }
+}
+
+export function deletePlaylist(id: string) {
+  if (isWeb) return;
+  const stmt = db!.prepareSync(`DELETE FROM playlists WHERE id = ?`);
+  try {
+    stmt.executeSync([id]);
+  } finally {
+    stmt.finalizeSync();
+  }
+}
+
+export function addTrackToPlaylistDb(playlistId: string, trackId: string, position: number) {
+  if (isWeb) return;
+  const stmt = db!.prepareSync(`INSERT OR REPLACE INTO playlist_tracks (playlist_id, track_id, position) VALUES (?, ?, ?)`);
+  try {
+    stmt.executeSync([playlistId, trackId, position]);
+  } finally {
+    stmt.finalizeSync();
+  }
+}
+
+export function removeTrackFromPlaylistDb(playlistId: string, trackId: string) {
+  if (isWeb) return;
+  const stmt = db!.prepareSync(`DELETE FROM playlist_tracks WHERE playlist_id = ? AND track_id = ?`);
+  try {
+    stmt.executeSync([playlistId, trackId]);
+  } finally {
+    stmt.finalizeSync();
+  }
+}
+
+export function getAllPlaylists(): any[] {
+  if (isWeb) return [];
+  const plStmt = db!.prepareSync('SELECT * FROM playlists ORDER BY createdAt DESC');
+  try {
+    const plResult = plStmt.executeSync();
+    const playlists = plResult.getAllSync() as any[];
+    
+    return playlists.map(p => {
+      const tracksStmt = db!.prepareSync(`
+        SELECT t.* FROM tracks t 
+        INNER JOIN playlist_tracks pt ON t.id = pt.track_id 
+        WHERE pt.playlist_id = ? 
+        ORDER BY pt.position ASC
+      `);
+      try {
+        const tracksResult = tracksStmt.executeSync([p.id]);
+        const tracks = tracksResult.getAllSync() as any[];
+        return {
+          id: p.id,
+          name: p.name,
+          createdAt: p.createdAt,
+          tracks: tracks.map(r => ({
+            ...r,
+            isFavorite: r.isFavorite === 1
+          }))
+        };
+      } finally {
+        tracksStmt.finalizeSync();
+      }
+    });
+  } finally {
+    plStmt.finalizeSync();
+  }
+}
+

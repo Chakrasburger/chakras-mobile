@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput, Alert } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, TextInput, Alert, ScrollView } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Ionicons } from '@expo/vector-icons';
@@ -14,9 +14,10 @@ import Animated, {
   withTiming, 
   withRepeat, 
   withSpring, 
-  cancelAnimation 
+  cancelAnimation,
+  SharedValue
 } from 'react-native-reanimated';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import TrackPlayer, { useProgress, State, usePlaybackState } from 'react-native-track-player';
 import Svg, { Path } from 'react-native-svg';
 import axios from 'axios';
@@ -72,16 +73,13 @@ function SoundVisualizer({ isPlaying, accentColor }: { isPlaying: boolean; accen
   });
 
   return (
-    <View style={styles.visualizerContainer}>
-      <Svg height="30" width={width - 48}>
-        <AnimatedPath
-          fill={accentColor + '18'}
-          stroke={accentColor}
-          strokeWidth={1.5}
-          animatedProps={animatedProps}
-        />
-      </Svg>
-    </View>
+    <Svg height="30" width={width - 48}>
+      <AnimatedPath
+        animatedProps={animatedProps}
+        fill={accentColor}
+        opacity={0.6}
+      />
+    </Svg>
   );
 }
 
@@ -103,7 +101,7 @@ export default function FullPlayerScreen() {
   const playbackState = usePlaybackState();
   const { position, duration } = useProgress();
   const { theme, accentColor } = useSettingsStore();
-  const { updateSong } = useLibraryStore();
+  const { updateSong, playlists, addTrackToPlaylist } = useLibraryStore();
 
   const [sliderWidth, setSliderWidth] = useState(0);
   const [isDragging, setIsDragging] = useState(false);
@@ -112,6 +110,7 @@ export default function FullPlayerScreen() {
   const [showLyrics, setShowLyrics] = useState(false);
   const [showQueue, setShowQueue] = useState(false);
   const [showOptions, setShowOptions] = useState(false);
+  const [showPlaylistSelection, setShowPlaylistSelection] = useState(false);
 
   // States for custom modals
   const [showManualSearch, setShowManualSearch] = useState(false);
@@ -123,12 +122,31 @@ export default function FullPlayerScreen() {
   const [editArtist, setEditArtist] = useState('');
   const [isSearchingCover, setIsSearchingCover] = useState(false);
 
+  const handleAddToPlaylist = (playlistId: string) => {
+    if (currentTrack) {
+      addTrackToPlaylist(playlistId, currentTrack);
+      Alert.alert('Éxito', `Se añadió "${currentTrack.title}" a la playlist.`);
+      setShowPlaylistSelection(false);
+      setShowOptions(false);
+    }
+  };
+
   // Reanimated values for Aura Fluida Dinámica
   const aura1X = useSharedValue(0);
   const aura1Y = useSharedValue(0);
   const aura2X = useSharedValue(0);
   const aura2Y = useSharedValue(0);
   const heartScale = useSharedValue(1);
+
+  // Scrubber high performance shared value
+  const scrubProgress = useSharedValue(0);
+
+  // Sync native progress with Reanimated progress bar
+  React.useEffect(() => {
+    if (!isDragging && duration > 0) {
+      scrubProgress.value = position / duration;
+    }
+  }, [position, duration, isDragging]);
 
   React.useEffect(() => {
     aura1X.value = withRepeat(withTiming(width * 0.3, { duration: 10000 }), -1, true);
@@ -328,22 +346,24 @@ export default function FullPlayerScreen() {
   };
 
   const handleNext = async () => {
-    await TrackPlayer.skipToNext();
-    next();
+    await next();
   };
 
   const handlePrevious = async () => {
-    await TrackPlayer.skipToPrevious();
-    previous();
+    await previous();
   };
 
   const handleTouchStart = (evt: any) => {
     setIsDragging(true);
-    updateDragPosition(evt);
+    updateDragProgress(evt);
+    try {
+      const Haptics = require('expo-haptics');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    } catch {}
   };
 
   const handleTouchMove = (evt: any) => {
-    updateDragPosition(evt);
+    updateDragProgress(evt);
   };
 
   const handleTouchEnd = async (evt: any) => {
@@ -355,24 +375,33 @@ export default function FullPlayerScreen() {
     const newPosition = pct * duration;
     await TrackPlayer.seekTo(newPosition);
     setIsDragging(false);
+    try {
+      const Haptics = require('expo-haptics');
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    } catch {}
   };
 
   const handleTouchCancel = () => {
     setIsDragging(false);
   };
 
-  const updateDragPosition = (evt: any) => {
+  const updateDragProgress = (evt: any) => {
     if (duration <= 0 || sliderWidth <= 0) return;
     const touchX = evt.nativeEvent.locationX;
     let pct = touchX / sliderWidth;
     if (pct < 0) pct = 0;
     if (pct > 1) pct = 1;
+    scrubProgress.value = pct;
     setDragPosition(pct * duration);
-    try {
-      const Haptics = require('expo-haptics');
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    } catch {}
   };
+
+  const animatedFillStyle = useAnimatedStyle(() => ({
+    width: `${scrubProgress.value * 100}%`
+  }));
+
+  const animatedThumbStyle = useAnimatedStyle(() => ({
+    left: `${scrubProgress.value * 100}%`
+  }));
 
   if (!currentTrack) {
     return <View style={[styles.container, { backgroundColor: theme === 'oled' ? '#000000' : '#121212' }]} />;
@@ -382,26 +411,17 @@ export default function FullPlayerScreen() {
   const displayPosition = isDragging ? dragPosition : position;
   const safeDisplayPosition = isNaN(displayPosition) ? 0 : displayPosition;
   const safeDuration = isNaN(duration) || duration <= 0 ? 1 : duration;
-  const progressPct = (safeDisplayPosition / safeDuration) * 100;
 
   return (
     <View style={[styles.container, { backgroundColor: dynamicBg }]}>
       {/* Dynamic Fluid Aura (Ambient Glow backdrop) */}
       <View style={[StyleSheet.absoluteFill, { overflow: 'hidden', backgroundColor: dynamicBg }]}>
-        <Animated.View style={[
-          styles.auraBlob, 
-          { backgroundColor: accentColor, left: '15%', top: '15%' }, 
-          animatedAura1
-        ]} />
-        <Animated.View style={[
-          styles.auraBlob, 
-          { backgroundColor: accentColor + '77', right: '10%', bottom: '25%' }, 
-          animatedAura2
-        ]} />
+        <Animated.View style={[styles.auraBlob, animatedAura1, { backgroundColor: `${accentColor}20` }]} />
+        <Animated.View style={[styles.auraBlob, animatedAura2, { backgroundColor: `${accentColor}10` }]} />
         {/* <BlurView intensity={120} tint="dark" style={StyleSheet.absoluteFill} /> */}
       </View>
 
-      <View style={[styles.content, { paddingTop: insets.top, paddingBottom: insets.bottom + 20 }]}>
+      <SafeAreaView style={styles.content}>
         {/* Header */}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => router.back()} hitSlop={10} style={styles.iconBtn}>
@@ -471,13 +491,8 @@ export default function FullPlayerScreen() {
               onTouchCancel={handleTouchCancel}
             >
               <View style={styles.sliderTrack} pointerEvents="none">
-                <LinearGradient
-                  colors={[accentColor, `${accentColor}aa`]}
-                  style={[styles.sliderFill, { width: `${progressPct}%` }]}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
-                />
-                <View style={[styles.sliderThumb, { left: `${progressPct}%`, shadowColor: accentColor }]} />
+                <Animated.View style={[styles.sliderFill, { backgroundColor: accentColor }, animatedFillStyle]} />
+                <Animated.View style={[styles.sliderThumb, { shadowColor: accentColor }, animatedThumbStyle]} />
               </View>
             </View>
             <View style={styles.timeRow}>
@@ -488,19 +503,33 @@ export default function FullPlayerScreen() {
 
           {/* Playback Controls */}
           <Animated.View style={styles.controlsRow}>
-            <TouchableOpacity hitSlop={10} onPress={toggleShuffle}>
-              <Ionicons 
-                name="shuffle" 
-                size={26} 
-                color={shuffleEnabled ? accentColor : TEXT_MUTED} 
-              />
+            <TouchableOpacity 
+              hitSlop={10} 
+              activeOpacity={0.6}
+              onPress={toggleShuffle}
+            >
+              <View style={styles.controlBtnWrapper}>
+                <View style={styles.controlIconContainer}>
+                  <Ionicons 
+                    name="shuffle" 
+                    size={26} 
+                    color={shuffleEnabled ? accentColor : TEXT_MUTED} 
+                  />
+                  {shuffleEnabled && <View style={[styles.activeDot, { backgroundColor: accentColor }]} />}
+                </View>
+              </View>
             </TouchableOpacity>
             
-            <TouchableOpacity hitSlop={10} onPress={handlePrevious}>
+            <TouchableOpacity 
+              hitSlop={10} 
+              activeOpacity={0.6}
+              onPress={handlePrevious}
+            >
               <Ionicons name="play-skip-back" size={36} color={TEXT_PRIMARY} />
             </TouchableOpacity>
             
             <TouchableOpacity 
+              activeOpacity={0.7}
               style={[styles.playPauseBtn, { shadowColor: accentColor }]} 
               onPress={handlePlayPause}
             >
@@ -514,16 +543,34 @@ export default function FullPlayerScreen() {
               </LinearGradient>
             </TouchableOpacity>
             
-            <TouchableOpacity hitSlop={10} onPress={handleNext}>
+            <TouchableOpacity 
+              hitSlop={10} 
+              activeOpacity={0.6}
+              onPress={handleNext}
+            >
               <Ionicons name="play-skip-forward" size={36} color={TEXT_PRIMARY} />
             </TouchableOpacity>
             
-            <TouchableOpacity hitSlop={10} onPress={cycleRepeatMode}>
-              <Ionicons 
-                name={repeatMode === 'one' ? "repeat" : "repeat"} 
-                size={26} 
-                color={repeatMode !== 'off' ? accentColor : TEXT_MUTED} 
-              />
+            <TouchableOpacity 
+              hitSlop={10} 
+              activeOpacity={0.6}
+              onPress={cycleRepeatMode}
+            >
+              <View style={styles.controlBtnWrapper}>
+                <View style={styles.controlIconContainer}>
+                  <Ionicons 
+                    name="repeat" 
+                    size={26} 
+                    color={repeatMode !== 'off' ? accentColor : TEXT_MUTED} 
+                  />
+                  {repeatMode === 'one' && (
+                    <View style={[styles.repeatOneBadge, { backgroundColor: accentColor }]}>
+                      <Text style={styles.repeatOneBadgeText}>1</Text>
+                    </View>
+                  )}
+                  {repeatMode !== 'off' && <View style={[styles.activeDot, { backgroundColor: accentColor }]} />}
+                </View>
+              </View>
             </TouchableOpacity>
           </Animated.View>
 
@@ -542,7 +589,7 @@ export default function FullPlayerScreen() {
             </TouchableOpacity>
           </Animated.View>
         </View>
-      </View>
+      </SafeAreaView>
 
       {/* Overlays */}
       {showEQ && <EqualizerView onClose={() => setShowEQ(false)} />}
@@ -560,6 +607,16 @@ export default function FullPlayerScreen() {
                 <Ionicons name="close" size={24} color="#DCDDDE" />
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity 
+              style={styles.optionItem}
+              onPress={() => {
+                setShowPlaylistSelection(true);
+              }}
+            >
+              <Ionicons name="list-outline" size={22} color={TEXT_PRIMARY} />
+              <Text style={styles.optionText}>Agregar a playlist...</Text>
+            </TouchableOpacity>
 
             <TouchableOpacity 
               style={styles.optionItem}
@@ -590,6 +647,39 @@ export default function FullPlayerScreen() {
               <Ionicons name="create-outline" size={22} color={TEXT_PRIMARY} />
               <Text style={styles.optionText}>Editar Título y Artista</Text>
             </TouchableOpacity>
+          </View>
+        </BlurView>
+      )}
+
+      {/* Playlist Selection Sheet */}
+      {showPlaylistSelection && (
+        <BlurView intensity={95} tint="dark" style={styles.optionsOverlay}>
+          <TouchableOpacity style={StyleSheet.absoluteFill} onPress={() => setShowPlaylistSelection(false)} />
+          <View style={[styles.optionsContainer, { maxHeight: '60%' }]}>
+            <View style={styles.optionsHeader}>
+              <Text style={styles.optionsTitle}>Seleccionar Playlist</Text>
+              <TouchableOpacity onPress={() => setShowPlaylistSelection(false)} style={styles.closeBtn}>
+                <Ionicons name="close" size={24} color="#DCDDDE" />
+              </TouchableOpacity>
+            </View>
+            <ScrollView showsVerticalScrollIndicator={false}>
+              {playlists.length === 0 ? (
+                <View style={{ padding: 40, alignItems: 'center' }}>
+                  <Text style={{ color: TEXT_MUTED, textAlign: 'center' }}>No tienes playlists creadas. Ve al apartado de Playlists para crear una.</Text>
+                </View>
+              ) : (
+                playlists.map((playlist) => (
+                  <TouchableOpacity
+                    key={playlist.id}
+                    style={styles.optionItem}
+                    onPress={() => handleAddToPlaylist(playlist.id)}
+                  >
+                    <Ionicons name="musical-notes-outline" size={22} color={accentColor} />
+                    <Text style={styles.optionText}>{playlist.name} ({playlist.tracks.length})</Text>
+                  </TouchableOpacity>
+                ))
+              )}
+            </ScrollView>
           </View>
         </BlurView>
       )}
@@ -666,6 +756,46 @@ export default function FullPlayerScreen() {
 }
 
 const styles = StyleSheet.create({
+  controlBtnWrapper: {
+    padding: 6,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  controlIconContainer: {
+    alignItems: 'center',
+    position: 'relative',
+  },
+  activeDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    marginTop: 4,
+    position: 'absolute',
+    bottom: -8,
+  },
+  repeatOneBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: '#1DB954',
+    borderRadius: 6,
+    width: 12,
+    height: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#121212',
+  },
+  repeatOneBadgeText: {
+    fontSize: 8,
+    fontWeight: 'bold',
+    color: '#fff',
+  },
+  playPauseAnimatedWrapper: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+  },
   container: {
     flex: 1,
   },

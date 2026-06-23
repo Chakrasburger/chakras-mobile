@@ -48,6 +48,7 @@ interface LibraryState {
   removePlaylist: (id: string) => void;
   addTrackToPlaylist: (playlistId: string, track: Track) => void;
   removeTrackFromPlaylist: (playlistId: string, trackId: string) => void;
+  setPlaylists: (playlists: Playlist[]) => void;
 }
 
 export const useLibraryStore = create<LibraryState>((set, get) => ({
@@ -163,34 +164,75 @@ export const useLibraryStore = create<LibraryState>((set, get) => ({
     });
   },
 
-  addPlaylist: (name) => set((state) => ({
-    playlists: [...state.playlists, {
-      id: Date.now().toString(),
-      name,
-      tracks: [],
-      createdAt: Date.now()
-    }]
-  })),
+  addPlaylist: (name) => {
+    const id = Date.now().toString();
+    const createdAt = Date.now();
+    try {
+      const { savePlaylist } = require('../services/library');
+      savePlaylist(id, name, createdAt);
+    } catch (e) {
+      console.warn('Error saving playlist to SQLite:', e);
+    }
+    set((state) => ({
+      playlists: [...state.playlists, {
+        id,
+        name,
+        tracks: [],
+        createdAt
+      }]
+    }));
+  },
 
-  removePlaylist: (id) => set((state) => ({
-    playlists: state.playlists.filter(p => p.id !== id)
-  })),
+  removePlaylist: (id) => {
+    try {
+      const { deletePlaylist } = require('../services/library');
+      deletePlaylist(id);
+    } catch (e) {
+      console.warn('Error deleting playlist from SQLite:', e);
+    }
+    set((state) => ({
+      playlists: state.playlists.filter(p => p.id !== id)
+    }));
+  },
 
-  addTrackToPlaylist: (playlistId, track) => set((state) => ({
-    playlists: state.playlists.map(p => {
-      if (p.id === playlistId && !p.tracks.some(t => t.id === track.id)) {
-        return { ...p, tracks: [...p.tracks, track] };
-      }
-      return p;
-    })
-  })),
+  addTrackToPlaylist: (playlistId, track) => {
+    try {
+      const { saveTrack, addTrackToPlaylistDb } = require('../services/library');
+      // Save track first to ensure SQLite integrity / foreign key constraint
+      saveTrack(track);
+      // For simplicity, position is tracks.length
+      const playlist = get().playlists.find(p => p.id === playlistId);
+      const position = playlist ? playlist.tracks.length : 0;
+      addTrackToPlaylistDb(playlistId, track.id, position);
+    } catch (e) {
+      console.warn('Error adding track to playlist in SQLite:', e);
+    }
+    set((state) => ({
+      playlists: state.playlists.map(p => {
+        if (p.id === playlistId && !p.tracks.some(t => t.id === track.id)) {
+          return { ...p, tracks: [...p.tracks, track] };
+        }
+        return p;
+      })
+    }));
+  },
 
-  removeTrackFromPlaylist: (playlistId, trackId) => set((state) => ({
-    playlists: state.playlists.map(p => {
-      if (p.id === playlistId) {
-        return { ...p, tracks: p.tracks.filter(t => t.id !== trackId) };
-      }
-      return p;
-    })
-  })),
+  removeTrackFromPlaylist: (playlistId, trackId) => {
+    try {
+      const { removeTrackFromPlaylistDb } = require('../services/library');
+      removeTrackFromPlaylistDb(playlistId, trackId);
+    } catch (e) {
+      console.warn('Error removing track from playlist in SQLite:', e);
+    }
+    set((state) => ({
+      playlists: state.playlists.map(p => {
+        if (p.id === playlistId) {
+          return { ...p, tracks: p.tracks.filter(t => t.id !== trackId) };
+        }
+        return p;
+      })
+    }));
+  },
+
+  setPlaylists: (playlists) => set({ playlists }),
 }));
